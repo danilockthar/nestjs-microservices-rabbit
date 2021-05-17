@@ -1,0 +1,59 @@
+version: "3"
+services:
+  database:
+    image: "mongo"
+    container_name: "my-mongo-container"
+    environment:
+      - MONGO_INITDB_DATABASE=your-database-name
+      - MONGO_INITDB_ROOT_USERNAME=my-container-root-username
+      - MONGO_INITDB_ROOT_PASSWORD=secret
+    volumes:
+      - ./init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
+      - ./mongo-volume:/data/db
+    ports:
+      - "27017-27019:27017-27019"
+
+  pgAdmin:
+    container_name: "pg-admin-microservices"
+    restart: always
+    image: dpage/pgadmin4
+    ports:
+      - "8000:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: 1234@admin.com
+      PGADMIN_DEFAULT_PASSWORD: 1234
+    volumes:
+      - pgadmin:/var/lib/pgadmin
+
+  postgres:
+    restart: always
+    image: postgres
+    container_name: "pg-microservice"
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: me
+      POSTGRES_PASSWORD: 1234
+      POSTGRES_DB: testDb
+    volumes:
+      - pgvol:/var/lib/postgresql/data
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: "rabbitmq-microservices"
+    ports:
+      - 5672:5672
+      - 15672:15672
+    volumes:
+      - ~/.docker-conf/rabbitmq/data/:/var/lib/rabbitmq/
+      - ~/.docker-conf/rabbitmq/log/:/var/log/rabbitmq
+    networks:
+      - rabbitmq_go_net
+
+networks:
+  rabbitmq_go_net:
+    driver: bridge
+
+volumes:
+  pgvol:
+  pgadmin:
